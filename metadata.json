@@ -1,0 +1,5 @@
+{
+  "name": "FPT Polytechnic - Phục chế ảnh",
+  "description": "Ứng dụng phục chế và làm đẹp ảnh cũ sử dụng công nghệ AI Gemini, cho phép cắt ảnh theo tỷ lệ và áp dụng các bộ lọc phục hồi chuyên sâu.",
+  "requestFramePermissions": []
+}
