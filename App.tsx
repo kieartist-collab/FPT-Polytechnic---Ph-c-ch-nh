@@ -140,15 +140,21 @@ const App: React.FC = () => {
   const progressInterval = useRef<any>(null);
 
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
+  const [tempApiKey, setTempApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
   const [showKeyInput, setShowKeyInput] = useState(false);
+  const [apiKeySaveSuccess, setApiKeySaveSuccess] = useState(false);
 
-  const handleApiKeyChange = (val: string) => {
-    const trimmed = val.trim();
+  const handleSaveApiKey = () => {
+    const trimmed = tempApiKey.trim();
     setApiKey(trimmed);
     localStorage.setItem('gemini_api_key', trimmed);
     if (trimmed) {
       setError(null);
     }
+    setApiKeySaveSuccess(true);
+    setTimeout(() => {
+      setApiKeySaveSuccess(false);
+    }, 3000);
   };
 
   const [isDragging, setIsDragging] = useState(false);
@@ -676,14 +682,6 @@ const App: React.FC = () => {
               <h3 className="text-xs font-heading font-black text-[#F16F24] flex items-center gap-2">
                 <span className="text-[10px] opacity-75">⚙️</span> CẤU HÌNH API KEY GEMINI
               </h3>
-              <a 
-                href="https://aistudio.google.com/" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-[9px] font-bold text-[#0767B1] hover:underline"
-              >
-                Nhận Key Miễn Phí ↗
-              </a>
             </div>
             
             <div className="space-y-2">
@@ -694,8 +692,8 @@ const App: React.FC = () => {
               <div className="relative flex items-center">
                 <input 
                   type={showKeyInput ? "text" : "password"} 
-                  value={apiKey} 
-                  onChange={(e) => handleApiKeyChange(e.target.value)} 
+                  value={tempApiKey} 
+                  onChange={(e) => setTempApiKey(e.target.value)} 
                   placeholder="Dán AI Studio API Key..." 
                   className="w-full pl-3 pr-10 py-2 bg-black/50 border border-[#F16F24]/30 rounded-xl focus:border-[#F16F24] outline-none text-[11px] text-[#F16F24] font-mono select-all" 
                 />
@@ -708,15 +706,29 @@ const App: React.FC = () => {
                 </button>
               </div>
 
+              <button
+                type="button"
+                onClick={handleSaveApiKey}
+                className="w-full py-2 px-4 bg-[#F16F24] hover:bg-[#F16F24]/90 text-white font-black text-[11px] font-heading rounded-xl shadow-[0_0_15px_rgba(241,111,36,0.3)] hover:shadow-[0_0_20px_rgba(241,111,36,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <span>💾 CẬP NHẬT & XÁC NHẬN KEY</span>
+              </button>
+
+              {apiKeySaveSuccess && (
+                <div className="text-[10px] text-[#11AF4B] font-bold bg-[#11AF4B]/10 border border-[#11AF4B]/20 p-2 rounded-xl text-center flex items-center justify-center gap-1.5 animate-pulse">
+                  <span>✨</span> Đã kích hoạt & lưu khóa API thành công!
+                </div>
+              )}
+
               {apiKey ? (
                 <div className="flex items-center gap-1.5 text-[9px] text-[#11AF4B] font-bold">
                   <span className="w-1.5 h-1.5 bg-[#11AF4B] rounded-full shadow-[0_0_5px_#11AF4B]"></span>
-                  Đang sử dụng API Key lưu trữ cục bộ
+                  Hệ thống đang hoạt động với API Key đã xác nhận
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 text-[9px] text-[#F16F24] font-bold animate-pulse">
                   <span className="w-1.5 h-1.5 bg-[#F16F24] rounded-full shadow-[0_0_5px_#F16F24]"></span>
-                  Chưa gán khóa API di động!
+                  Vui lòng dán khóa API và bấm nút Cập nhật ở trên!
                 </div>
               )}
             </div>
