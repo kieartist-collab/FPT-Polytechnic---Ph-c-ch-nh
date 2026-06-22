@@ -2,8 +2,21 @@
 import { GoogleGenAI } from "@google/genai";
 import { Gender, AgeRange, RESTORATION_TAGS } from "../types";
 
+// Hàm dọn dẹp và chuẩn hóa API Key để tránh lỗi Header ISO-8859-1 (loại bỏ dính dấu cách, dấu nháy, ký tự ẩn hoặc Tiếng Việt)
+const cleanApiKey = (key?: string): string => {
+  if (!key) return '';
+  return key
+    .trim()
+    .replace(/^["']|["']$/g, '') // Xóa dấu nháy đơn/kép bọc ngoài nếu người dùng gõ nhầm
+    .replace(/[^a-zA-Z0-9_\-]/g, '') // Chỉ giữ lại chữ, số, gạch dưới và gạch ngang (chuẩn khóa Google AIzaSy...)
+    .trim();
+};
+
 // Hàm khởi tạo AI nhận key động
-const getAI = (apiKey?: string) => new GoogleGenAI({ apiKey: (apiKey || process.env.API_KEY || '').trim() });
+const getAI = (apiKey?: string) => {
+  const sanitizedKey = cleanApiKey(apiKey) || cleanApiKey(process.env.API_KEY);
+  return new GoogleGenAI({ apiKey: sanitizedKey });
+};
 
 // Hàm mới: Phân tích phong cách nghệ thuật từ ảnh tham chiếu (Style Reference)
 export const analyzeStyleReference = async (

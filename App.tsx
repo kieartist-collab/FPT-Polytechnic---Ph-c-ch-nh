@@ -145,10 +145,17 @@ const App: React.FC = () => {
   const [apiKeySaveSuccess, setApiKeySaveSuccess] = useState(false);
 
   const handleSaveApiKey = () => {
-    const trimmed = tempApiKey.trim();
-    setApiKey(trimmed);
-    localStorage.setItem('gemini_api_key', trimmed);
-    if (trimmed) {
+    // Làm sạch tối đa API Key khi người dùng bấm Lưu
+    const sanitized = tempApiKey
+      .trim()
+      .replace(/^["']|["']$/g, '') // Xóa dấu nháy
+      .replace(/[^a-zA-Z0-9_\-]/g, '') // Chỉ lấy ký tự chuẩn Base64 hợp lệ cho Gemini API key
+      .trim();
+
+    setApiKey(sanitized);
+    setTempApiKey(sanitized);
+    localStorage.setItem('gemini_api_key', sanitized);
+    if (sanitized) {
       setError(null);
     }
     setApiKeySaveSuccess(true);
