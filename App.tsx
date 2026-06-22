@@ -139,8 +139,18 @@ const App: React.FC = () => {
   const [loadingText, setLoadingText] = useState(LOADING_MESSAGES[0].text);
   const progressInterval = useRef<any>(null);
 
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
+  const [showKeyInput, setShowKeyInput] = useState(false);
 
-  
+  const handleApiKeyChange = (val: string) => {
+    const trimmed = val.trim();
+    setApiKey(trimmed);
+    localStorage.setItem('gemini_api_key', trimmed);
+    if (trimmed) {
+      setError(null);
+    }
+  };
+
   const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,13 +172,22 @@ const App: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  useEffect(() => {
+    if (!apiKey && !(process.env.API_KEY || '').trim()) {
+      setError("LỖI HỆ THỐNG: API key is missing. Vui lòng dán Gemini API Key mới vào mục cấu hình ở thanh bên phải để tiếp tục.");
+    } else {
+      setError(null);
+    }
+  }, [apiKey]);
+
   const analyzeImage = async (imageSrc: string, currentTags: string[] = []) => {
     setIsLoadingSuggesting(true);
     setSuggestedPrompts(null);
     try {
       const result = await analyzeAndSuggestPrompts(
         imageSrc,
-        currentTags
+        currentTags,
+        apiKey
       );
       
       setGender(result.gender);
@@ -267,7 +286,7 @@ const App: React.FC = () => {
 
         try {
           // Analyze style via Gemini
-          const analysis = await analyzeStyleReference(result);
+          const analysis = await analyzeStyleReference(result, apiKey);
           setPositivePrompt(prev => {
              // Append or Replace? User said "system will auto fill". Let's replace for clarity, or append with newline.
              // Strategy: Replace to respect the "Reference Style" intention fully.
@@ -340,7 +359,7 @@ const App: React.FC = () => {
         negativePrompt,
         selectedTags, 
         { gender, age },
-        undefined,
+        apiKey,
         state.mask
       );
       stopProgressSimulation();
@@ -651,6 +670,58 @@ const App: React.FC = () => {
       <aside className="w-[440px] h-full bg-[#030912] border-l border-[#0767B1]/20 flex flex-col relative z-40 pt-4 pb-4">
         <div className="p-5 border-b border-[#0767B1]/10 bg-black/20 flex flex-col"> <h2 className="text-sm font-heading font-black text-[#11AF4B] flex items-center gap-3"> <div className="w-2 h-2 bg-[#11AF4B] rounded-full animate-pulse shadow-[0_0_8px_#11AF4B]"></div> Hệ thống điều khiển AI </h2> </div>
         <div className="flex-1 overflow-y-auto p-5 no-scrollbar space-y-6">
+          {/* CẤU HÌNH API KEY (Dành cho Vercel/GitHub Pages) */}
+          <section className="bg-[#F16F24]/5 border border-[#F16F24]/20 rounded-2xl p-4 space-y-3">
+            <div className="flex justify-between items-center border-b border-[#F16F24]/20 pb-1.5">
+              <h3 className="text-xs font-heading font-black text-[#F16F24] flex items-center gap-2">
+                <span className="text-[10px] opacity-75">⚙️</span> CẤU HÌNH API KEY GEMINI
+              </h3>
+              <a 
+                href="https://aistudio.google.com/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-[9px] font-bold text-[#0767B1] hover:underline"
+              >
+                Nhận Key Miễn Phí ↗
+              </a>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-[9px] text-slate-400 leading-relaxed font-bold">
+                Mặc định Vercel/GitHub không lưu sẵn API Key của bạn. Vui lòng dán API Key Gemini của bạn để bắt đầu phục chế ảnh:
+              </p>
+              
+              <div className="relative flex items-center">
+                <input 
+                  type={showKeyInput ? "text" : "password"} 
+                  value={apiKey} 
+                  onChange={(e) => handleApiKeyChange(e.target.value)} 
+                  placeholder="Dán AI Studio API Key..." 
+                  className="w-full pl-3 pr-10 py-2 bg-black/50 border border-[#F16F24]/30 rounded-xl focus:border-[#F16F24] outline-none text-[11px] text-[#F16F24] font-mono select-all" 
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowKeyInput(!showKeyInput)}
+                  className="absolute right-3 text-slate-400 hover:text-white text-xs font-bold"
+                >
+                  {showKeyInput ? "Ẩn" : "Hiện"}
+                </button>
+              </div>
+
+              {apiKey ? (
+                <div className="flex items-center gap-1.5 text-[9px] text-[#11AF4B] font-bold">
+                  <span className="w-1.5 h-1.5 bg-[#11AF4B] rounded-full shadow-[0_0_5px_#11AF4B]"></span>
+                  Đang sử dụng API Key lưu trữ cục bộ
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-[9px] text-[#F16F24] font-bold animate-pulse">
+                  <span className="w-1.5 h-1.5 bg-[#F16F24] rounded-full shadow-[0_0_5px_#F16F24]"></span>
+                  Chưa gán khóa API di động!
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* PHẦN 1: PHÂN TÍCH ĐẶC ĐIỂM (Tự động + User Edit) */}
           {renderAnalysisSection()}
           
