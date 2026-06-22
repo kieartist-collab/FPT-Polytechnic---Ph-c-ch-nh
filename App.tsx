@@ -164,6 +164,13 @@ const App: React.FC = () => {
     }, 3000);
   };
 
+  const handleDeleteApiKey = () => {
+    setApiKey('');
+    setTempApiKey('');
+    localStorage.removeItem('gemini_api_key');
+    setError(null);
+  };
+
   const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -745,13 +752,25 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleSaveApiKey}
-                className="w-full py-2 px-4 bg-[#F16F24] hover:bg-[#F16F24]/90 text-white font-black text-[11px] font-heading rounded-xl shadow-[0_0_15px_rgba(241,111,36,0.3)] hover:shadow-[0_0_20px_rgba(241,111,36,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span>💾 CẬP NHẬT & XÁC NHẬN KEY</span>
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="flex-1 py-2 px-3 bg-[#F16F24] hover:bg-[#F16F24]/90 text-white font-black text-[10px] font-heading rounded-xl shadow-[0_0_15px_rgba(241,111,36,0.2)] hover:shadow-[0_0_20px_rgba(241,111,36,0.4)] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>💾 CẬP NHẬT KEY</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteApiKey}
+                  disabled={!tempApiKey && !apiKey}
+                  className={`py-2 px-3 border font-black text-[10px] font-heading rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5 ${(!tempApiKey && !apiKey) ? 'bg-red-950/10 text-red-500/30 border-red-500/10 cursor-not-allowed select-none' : 'bg-red-500/10 text-red-400 border-red-500/35 hover:bg-red-500 hover:text-white hover:border-red-500'}`}
+                  title="Xóa khóa API đã lưu khỏi hệ thống"
+                >
+                  <span>🗑️ XÓA KEY</span>
+                </button>
+              </div>
 
               {apiKeySaveSuccess && (
                 <div className="text-[10px] text-[#11AF4B] font-bold bg-[#11AF4B]/10 border border-[#11AF4B]/20 p-2 rounded-xl text-center flex items-center justify-center gap-1.5 animate-pulse">
