@@ -413,8 +413,13 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       let detailedError = err.message || JSON.stringify(err);
-      if (detailedError.includes('403') || detailedError.includes('API key not valid')) {
-        setError("LỖI API KEY: Khóa API không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra và thay thế khóa mới.");
+      if (detailedError.includes('403') || detailedError.includes('API key not valid') || detailedError.includes('permission') || detailedError.includes('denied')) {
+        setError(
+          "LỖI KHÓA API (HOẶC GIỚI HẠN TÀI KHOẢN - Lỗi 403): Khóa API của bạn chính xác, nhưng bị từ chối truy cập vì hai nguyên nhân sau:\n\n" +
+          "1. YÊU CẦU TÀI KHOẢN TRẢ PHÍ (PAID TIER): Mô hình phục chế ảnh chuyên sâu 'gemini-2.5-flash-image' bắt buộc phải sử dụng API Key thuộc tài khoản đã thiết lập thanh toán (Pay-as-you-go) trên Google AI Studio. Tài khoản miễn phí (Free Tier) tiêu chuẩn sẽ không được cấp quyền chạy mô hình hình ảnh này.\n" +
+          "2. KIỂM TRA LẠI KHÓA: Đảm bảo bạn đã copy đầy đủ chuỗi khóa (bắt đầu bằng AIzaSy...) và khóa đó chưa bị vô hiệu hóa.\n\n" +
+          "👉 Cách khắc phục: Truy cập Google AI Studio, vào phần Settings > Billing để liên kết thẻ thanh toán quốc tế (Visa/Mastercard) để nâng cấp tài khoản của bạn lên Paid Tier."
+        );
       } else if (detailedError.includes('429') || detailedError.includes('Quota')) {
         setError("QUÁ TẢI (Lỗi 429 / Quota): Tài khoản API Key miễn phí bị giới hạn tần suất gọi liên tục (tối đa 1-2 lần/phút). Bạn hãy đợi khoảng 1 phút và bấm nút \"PHỤC CHẾ\" lần nữa nhé!");
       } else if (detailedError.includes('503')) {
@@ -731,10 +736,6 @@ const App: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <p className="text-[9px] text-slate-400 leading-relaxed font-bold">
-                Mặc định Vercel/GitHub không lưu sẵn API Key của bạn. Vui lòng dán API Key Gemini của bạn để bắt đầu phục chế ảnh:
-              </p>
-              
               <div className="relative flex items-center">
                 <input 
                   type={showKeyInput ? "text" : "password"} 
@@ -889,7 +890,7 @@ const App: React.FC = () => {
               </div>
           </section>
 
-          {error && <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-[11px] font-bold animate-pulse">{error}</div>}
+          {error && <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-[11px] font-bold whitespace-pre-line leading-relaxed">{error}</div>}
           </div>
         </div>
         <div className={`bg-[#02060c] border-t border-[#0767B1]/20 flex flex-col ${!apiKey ? "opacity-25 pointer-events-none select-none filter blur-[0.6px]" : ""}`}>
