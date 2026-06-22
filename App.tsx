@@ -206,7 +206,12 @@ const App: React.FC = () => {
       setError(null);
     } catch (e: any) {
       console.error(e);
-      setError("AI không phản hồi. Có thể do API Key hoặc lỗi mạng.");
+      const errStr = e.message || JSON.stringify(e);
+      if (errStr.includes('429') || errStr.includes('Quota')) {
+        setError("GIỚI HẠN TẦN SUẤT (Lỗi 429): API Key miễn phí có giới hạn cuộc gọi liên tục. Hệ thống phân tích tự động tạm dừng, nhưng bạn vẫn có thể tự nhập mô tả mong muốn và nhấn Phục chế!");
+      } else {
+        setError("Chức năng phân tích ảnh tự động tạm thời gặp sự cố. Bạn vẫn có thể tự nhập mô tả và nhấn nút Phục chế.");
+      }
     } finally {
       setIsLoadingSuggesting(false);
     }
@@ -300,8 +305,13 @@ const App: React.FC = () => {
           });
           setNegativePrompt(analysis.negative);
           setIsPromptDirty(true);
-        } catch (err) {
-          setError("Lỗi khi phân tích ảnh tham chiếu. Vui lòng thử lại.");
+        } catch (err: any) {
+          const errStr = err?.message || JSON.stringify(err);
+          if (errStr.includes('429') || errStr.includes('Quota')) {
+            setError("GIỚI HẠN TẦN SUẤT (Lỗi 429): API Key miễn phí quá số lần gọi liên tục cho phép. Vui lòng đợi 1 phút và thử tải lại ảnh tham chiếu.");
+          } else {
+            setError("Lỗi khi phân tích ảnh tham chiếu. Vui lòng thử lại hoặc tự điền mô tả trực tiếp.");
+          }
         } finally {
           setIsAnalyzingStyle(false);
           // Reset file input so user can re-upload same file if needed
@@ -390,11 +400,11 @@ const App: React.FC = () => {
     } catch (err: any) {
       let detailedError = err.message || JSON.stringify(err);
       if (detailedError.includes('403') || detailedError.includes('API key not valid')) {
-        setError("LỖI API KEY: Key không hợp lệ. Vui lòng liên hệ quản trị viên.");
+        setError("LỖI API KEY: Khóa API không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra và thay thế khóa mới.");
       } else if (detailedError.includes('429') || detailedError.includes('Quota')) {
-        setError("QUÁ TẢI (429): Bạn đang gửi yêu cầu quá nhanh. Hãy đợi 1-2 phút.");
+        setError("QUÁ TẢI (Lỗi 429 / Quota): Tài khoản API Key miễn phí bị giới hạn tần suất gọi liên tục (tối đa 1-2 lần/phút). Bạn hãy đợi khoảng 1 phút và bấm nút \"PHỤC CHẾ\" lần nữa nhé!");
       } else if (detailedError.includes('503')) {
-         setError("MÁY CHỦ BẬN (503): Google AI đang bảo trì hoặc quá tải.");
+         setError("MÁY CHỦ BẬN (503): Google AI đang quá tải hoặc bảo trì tạm thời.");
       } else {
         setError(`LỖI HỆ THỐNG: ${detailedError.substring(0, 100)}...`);
       }

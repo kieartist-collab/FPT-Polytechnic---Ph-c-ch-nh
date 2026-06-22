@@ -34,7 +34,7 @@ export const analyzeStyleReference = async (
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash',
       contents: {
         parts: [
           { inlineData: { data: imageData, mimeType: 'image/png' } },
@@ -105,7 +105,7 @@ export const analyzeAndSuggestPrompts = async (
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash',
       contents: {
         parts: [
           { inlineData: { data: imageData, mimeType: 'image/png' } },
