@@ -689,6 +689,28 @@ const App: React.FC = () => {
           </div>
         )}
         <div className="absolute bottom-0 left-0 right-0 h-10 bg-[#4c1d95] z-[100] flex items-center justify-between px-4 border-t border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]"> <span className="text-white/80 font-bold text-[10px] font-heading">© 2026. Bản quyền thuộc về FPT Polytechnic</span> <span className="text-white/80 font-bold text-[10px] font-heading">Bộ môn Thiết kế đồ họa | Đỗ Trung Kiên - kiendt37 | 090 222 2612</span> </div>
+        
+        {/* LỚP PHỦ MỜ KHI CHƯA NHẬP API KEY */}
+        {!apiKey && (
+          <div className="absolute inset-0 z-[150] bg-black/75 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 pointer-events-auto">
+            <div className="max-w-md p-8 bg-[#030912]/95 border-2 border-dashed border-[#F16F24]/40 rounded-3xl shadow-[0_0_50px_rgba(241,111,36,0.25)] space-y-6 flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#F16F24]/10 rounded-full flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(241,111,36,0.3)] animate-bounce select-none">
+                🔐
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-lg font-heading font-black text-white uppercase tracking-widest leading-snug">
+                  HỆ THỐNG ĐANG TẠM KHÓA
+                </h2>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-bold">
+                  Để bắt đầu trải nghiệm phục chế ảnh chất lượng cao, vui lòng dán khóa <span className="text-[#F16F24]">Gemini API Key</span> của bạn vào cột cấu hình bên phải và chọn cập nhật để kích hoạt toàn bộ tính năng.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-white font-black bg-[#F16F24] px-4 py-2.5 rounded-xl animate-pulse shadow-[0_0_15px_rgba(241,111,36,0.5)] select-none">
+                <span>👉</span> VUI LÒNG DÁN VÀ BẤM NÚT CẬP NHẬT Ở CỘT PHẢI
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <aside className="w-[440px] h-full bg-[#030912] border-l border-[#0767B1]/20 flex flex-col relative z-40 pt-4 pb-4">
         <div className="p-5 border-b border-[#0767B1]/10 bg-black/20 flex flex-col"> <h2 className="text-sm font-heading font-black text-[#11AF4B] flex items-center gap-3"> <div className="w-2 h-2 bg-[#11AF4B] rounded-full animate-pulse shadow-[0_0_8px_#11AF4B]"></div> Hệ thống điều khiển AI </h2> </div>
@@ -751,7 +773,9 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* PHẦN 1: PHÂN TÍCH ĐẶC ĐIỂM (Tự động + User Edit) */}
+          {/* Wrapper khóa các thành phần điều khiển bên dưới khi chưa có API Key */}
+          <div className={!apiKey ? "opacity-25 pointer-events-none filter blur-[0.6px] select-none transition-all duration-500 space-y-6" : "transition-all duration-500 space-y-6"}>
+            {/* PHẦN 1: PHÂN TÍCH ĐẶC ĐIỂM (Tự động + User Edit) */}
           {renderAnalysisSection()}
           
           {/* PHẦN 2: PHỤC HỒI CHI TIẾT VẬT LÝ */}
@@ -830,7 +854,7 @@ const App: React.FC = () => {
                    <label className="text-[10px] text-red-400 font-bold mb-2 block">Negative Prompt (Loại bỏ chi tiết thừa)</label> 
                    {/* NEGATIVE PRESETS LIST */}
                    <div className="flex flex-wrap gap-2 mb-2">
-                      {NEGATIVE_PRESETS.map((preset, index) => (
+                     {NEGATIVE_PRESETS.map((preset, index) => (
                         <button 
                           key={index}
                           onClick={() => handleNegativePresetClick(preset.value)}
@@ -840,23 +864,22 @@ const App: React.FC = () => {
                           {preset.label}
                         </button>
                       ))}
-                   </div>
-                   <textarea value={negativePrompt} onChange={(e) => handlePromptChange('negative', e.target.value)} placeholder="Những gì bạn KHÔNG muốn xuất hiện..." className="w-full h-40 p-3 bg-black/40 border border-red-500/30 rounded-xl focus:border-red-500 outline-none resize-none text-[11px] text-red-400 font-medium" /> 
-                 </div>
-             </div>
+                    </div>
+                    <textarea value={negativePrompt} onChange={(e) => handlePromptChange('negative', e.target.value)} placeholder="Những gì bạn KHÔNG muốn xuất hiện..." className="w-full h-40 p-3 bg-black/40 border border-red-500/30 rounded-xl focus:border-red-500 outline-none resize-none text-[11px] text-red-400 font-medium" /> 
+                  </div>
+              </div>
           </section>
 
-
-
           {error && <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-[11px] font-bold animate-pulse">{error}</div>}
+          </div>
         </div>
-        <div className="bg-[#02060c] border-t border-[#0767B1]/20 flex flex-col">
+        <div className={`bg-[#02060c] border-t border-[#0767B1]/20 flex flex-col ${!apiKey ? "opacity-25 pointer-events-none select-none filter blur-[0.6px]" : ""}`}>
           <div className="p-4 space-y-3">
             {state.restored && !isLoading && ( <button onClick={handleApplyResultAsInput} className="w-full py-3 rounded-xl text-xs font-heading font-black border-2 border-[#F16F24] text-[#F16F24] bg-[#F16F24]/10 hover:bg-[#F16F24] hover:text-white transition-all flex items-center justify-center gap-2"> <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Sử dụng kết quả để tiếp tục </button> )}
             <button 
                 onClick={handleRestore} 
-                disabled={isLoading || !state.original} 
-                className={`w-full py-3 rounded-xl text-sm font-heading font-black border-2 transition-all relative overflow-hidden ${isLoading || !state.original ? 'bg-[#0767B1]/10 text-[#0767B1]/50' : isPromptDirty ? 'bg-white text-[#11AF4B] border-[#11AF4B] animate-pulse shadow-[0_0_15px_rgba(17,175,75,0.5)]' : 'bg-[#11AF4B] border-[#11AF4B] text-white hover:bg-white hover:text-[#11AF4B]'}`}
+                disabled={isLoading || !state.original || !apiKey} 
+                className={`w-full py-3 rounded-xl text-sm font-heading font-black border-2 transition-all relative overflow-hidden ${isLoading || !state.original || !apiKey ? 'bg-[#0767B1]/10 text-[#0767B1]/50 border-transparent' : isPromptDirty ? 'bg-white text-[#11AF4B] border-[#11AF4B] animate-pulse shadow-[0_0_15px_rgba(17,175,75,0.5)]' : 'bg-[#11AF4B] border-[#11AF4B] text-white hover:bg-white hover:text-[#11AF4B]'}`}
             > 
                 {isLoading ? "Đang xử lý..." : isPromptDirty ? "Áp dụng & Phục chế" : (state.restored ? "Phục chế lại" : "Bắt đầu phục chế")} 
             </button>
