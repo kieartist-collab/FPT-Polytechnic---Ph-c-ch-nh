@@ -5,16 +5,38 @@ import { Gender, AgeRange, RESTORATION_TAGS } from "../types";
 // Hàm dọn dẹp và chuẩn hóa API Key để tránh lỗi Header ISO-8859-1 (loại bỏ dính dấu cách, dấu nháy, ký tự ẩn hoặc Tiếng Việt)
 const cleanApiKey = (key?: string): string => {
   if (!key) return '';
-  return key
-    .trim()
-    .replace(/^["']|["']$/g, '') // Xóa dấu nháy đơn/kép bọc ngoài nếu người dùng gõ nhầm
-    .replace(/[^a-zA-Z0-9_\-]/g, '') // Chỉ giữ lại chữ, số, gạch dưới và gạch ngang (chuẩn khóa Google AIzaSy...)
-    .trim();
+  let trimmed = key.trim();
+  
+  // Loại bỏ dấu nháy đơn/kép bọc ngoài không dùng Regex
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    trimmed = trimmed.slice(1, -1);
+  } else if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    trimmed = trimmed.slice(1, -1);
+  }
+  
+  trimmed = trimmed.trim();
+  
+  // Lọc lấy các ký tự hợp lệ cho Google Gemini API Key (chữ, số, gạch dưới, gạch ngang và dấu chấm .)
+  // Hoàn toàn không dùng Regex để ngăn ngừa lỗi biên dịch của Babel/Vite
+  const validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+  let result = "";
+  for (let i = 0; i < trimmed.length; i++) {
+    const char = trimmed[i];
+    if (validChars.indexOf(char) !== -1) {
+      result += char;
+    }
+  }
+  return result;
 };
 
 // Hàm khởi tạo AI nhận key động
 const getAI = (apiKey?: string) => {
-  const sanitizedKey = cleanApiKey(apiKey) || cleanApiKey(process.env.API_KEY);
+  const defaultEnvKey = (
+    import.meta.env?.VITE_GEMINI_API_KEY || 
+    (typeof process !== "undefined" ? process.env?.API_KEY : "") || 
+    ""
+  ).trim();
+  const sanitizedKey = cleanApiKey(apiKey) || cleanApiKey(defaultEnvKey);
   return new GoogleGenAI({ apiKey: sanitizedKey });
 };
 
@@ -59,10 +81,12 @@ export const analyzeStyleReference = async (
     let text = response.text;
     
     if (text) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         try {
-          const json = JSON.parse(jsonMatch[0]);
+          const jsonString = text.slice(firstBrace, lastBrace + 1);
+          const json = JSON.parse(jsonString);
           return {
             positive: json.positive || "",
             negative: json.negative || ""
@@ -138,10 +162,12 @@ export const analyzeAndSuggestPrompts = async (
     };
 
     if (text) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         try {
-          const json = JSON.parse(jsonMatch[0]);
+          const jsonString = text.slice(firstBrace, lastBrace + 1);
+          const json = JSON.parse(jsonString);
           return {
             positive: json.positive || "",
             negative: json.negative || "",

@@ -139,18 +139,36 @@ const App: React.FC = () => {
   const [loadingText, setLoadingText] = useState(LOADING_MESSAGES[0].text);
   const progressInterval = useRef<any>(null);
 
-  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
-  const [tempApiKey, setTempApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
+  // Khóa API mặc định lấy từ biến môi trường của Vercel (VITE_GEMINI_API_KEY) hoặc localStorage
+  const DEFAULT_API_KEY = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || DEFAULT_API_KEY);
+  const [tempApiKey, setTempApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || DEFAULT_API_KEY);
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [apiKeySaveSuccess, setApiKeySaveSuccess] = useState(false);
 
   const handleSaveApiKey = () => {
-    // Làm sạch tối đa API Key khi người dùng bấm Lưu
-    const sanitized = tempApiKey
-      .trim()
-      .replace(/^["']|["']$/g, '') // Xóa dấu nháy
-      .replace(/[^a-zA-Z0-9_\-]/g, '') // Chỉ lấy ký tự chuẩn Base64 hợp lệ cho Gemini API key
-      .trim();
+    // Làm sạch tối đa API Key khi người dùng bấm Lưu (cho phép chữ, số, gạch ngang, gạch dưới và dấu chấm .)
+    let trimmed = tempApiKey.trim();
+    
+    // Loại bỏ dấu nháy không dùng Regex
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      trimmed = trimmed.slice(1, -1);
+    } else if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+      trimmed = trimmed.slice(1, -1);
+    }
+    
+    trimmed = trimmed.trim();
+
+    // Lọc thủ công các ký tự hợp lệ để bảo đảm an toàn 100% với Vite/Babel
+    const validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+    let sanitized = "";
+    for (let i = 0; i < trimmed.length; i++) {
+      const char = trimmed[i];
+      if (validChars.indexOf(char) !== -1) {
+        sanitized += char;
+      }
+    }
 
     setApiKey(sanitized);
     setTempApiKey(sanitized);
@@ -170,6 +188,7 @@ const App: React.FC = () => {
     localStorage.removeItem('gemini_api_key');
     setError(null);
   };
+
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -893,7 +912,7 @@ const App: React.FC = () => {
           {error && <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-[11px] font-bold whitespace-pre-line leading-relaxed">{error}</div>}
           </div>
         </div>
-        <div className={`bg-[#02060c] border-t border-[#0767B1]/20 flex flex-col ${!apiKey ? "opacity-25 pointer-events-none select-none filter blur-[0.6px]" : ""}`}>
+        <div className="bg-[#02060c] border-t border-[#0767B1]/20 flex flex-col">
           <div className="p-4 space-y-3">
             {state.restored && !isLoading && ( <button onClick={handleApplyResultAsInput} className="w-full py-3 rounded-xl text-xs font-heading font-black border-2 border-[#F16F24] text-[#F16F24] bg-[#F16F24]/10 hover:bg-[#F16F24] hover:text-white transition-all flex items-center justify-center gap-2"> <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Sử dụng kết quả để tiếp tục </button> )}
             <button 
